@@ -90,11 +90,36 @@ export const initializeDatabase = async () => {
           name TEXT NOT NULL UNIQUE,
           type TEXT NOT NULL CHECK(type IN ('maximize', 'minimize')),
           description TEXT,
+          weight REAL DEFAULT 0.0,
           created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
       `, (err) => {
         if (err) reject(err);
         else resolve();
+      });
+    });
+  };
+
+  const migrateSchema = () => {
+    return new Promise((resolve, reject) => {
+      // Check if weight column exists in criteria table
+      database.all("PRAGMA table_info(criteria)", (err, columns) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+
+        const hasWeight = columns && columns.some(col => col.name === 'weight');
+        
+        if (hasWeight) {
+          resolve();
+        } else {
+          // Add weight column if it doesn't exist
+          database.run(`ALTER TABLE criteria ADD COLUMN weight REAL DEFAULT 0.0`, (err) => {
+            if (err) reject(err);
+            else resolve();
+          });
+        }
       });
     });
   };
@@ -127,6 +152,10 @@ export const initializeDatabase = async () => {
       createEvaluationsTable()
     ]);
     console.log('Database tables created/verified');
+    
+    // Run migrations
+    await migrateSchema();
+    console.log('Database schema migrated');
   } catch (error) {
     throw new Error(`Database initialization failed: ${error.message}`);
   }

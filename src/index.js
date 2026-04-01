@@ -4,6 +4,7 @@ import { initializeDatabase } from './db/database.js';
 import alternativesRouter from './routes/alternatives.js';
 import criteriaRouter from './routes/criteria.js';
 import evaluationsRouter from './routes/evaluations.js';
+import decisionsRouter from './routes/decisions.js';
 
 dotenv.config();
 
@@ -17,6 +18,7 @@ app.use(express.json());
 app.use('/api/alternatives', alternativesRouter);
 app.use('/api/criteria', criteriaRouter);
 app.use('/api/evaluations', evaluationsRouter);
+app.use('/api/decisions', decisionsRouter);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

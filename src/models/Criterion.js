@@ -48,4 +48,47 @@ export class Criterion {
     const row = await get(db, 'SELECT id FROM criteria WHERE id = ?', [id]);
     return !!row;
   }
+
+  static async setWeight(id, weight) {
+    const db = getDatabase();
+    const result = await run(db,
+      'UPDATE criteria SET weight = ? WHERE id = ?',
+      [weight, id]
+    );
+    return result.changes > 0;
+  }
+
+  static async getWeight(id) {
+    const db = getDatabase();
+    const row = await get(db, 'SELECT weight FROM criteria WHERE id = ?', [id]);
+    return row ? row.weight : null;
+  }
+
+  static async getAllWeights() {
+    const db = getDatabase();
+    const rows = await all(db, 'SELECT id, name, weight FROM criteria ORDER BY id');
+    const weights = {};
+    rows.forEach(row => {
+      weights[row.id] = row.weight;
+    });
+    return { data: rows, weights };
+  }
+
+  static async normalizeWeights() {
+    const db = getDatabase();
+    const rows = await all(db, 'SELECT id, weight FROM criteria WHERE weight > 0');
+    
+    if (rows.length === 0) return false;
+
+    const sum = rows.reduce((acc, row) => acc + row.weight, 0);
+    
+    if (sum === 0) return false;
+
+    for (const row of rows) {
+      const normalizedWeight = row.weight / sum;
+      await run(db, 'UPDATE criteria SET weight = ? WHERE id = ?', [normalizedWeight, row.id]);
+    }
+
+    return true;
+  }
 }

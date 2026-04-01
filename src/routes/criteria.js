@@ -88,4 +88,56 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+// Get all weights
+router.get('/weights/all', async (req, res) => {
+  try {
+    const result = await CriterionService.getAllWeights();
+    res.json({
+      success: true,
+      data: result.data,
+      weights: result.weights
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+});
+
+// Set weight for a criterion
+router.put('/:id/weight', async (req, res) => {
+  try {
+    const { weight } = req.body;
+    const criterion = await CriterionService.setWeight(parseInt(req.params.id), weight);
+    res.json({
+      success: true,
+      data: criterion,
+      message: 'Criterion weight set successfully'
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: error.message
+    });
+  }
+});
+
+// Normalize weights (make them sum to 1.0)
+router.post('/weights/normalize', async (req, res) => {
+  try {
+    const result = await CriterionService.normalizeWeights();
+    res.json({
+      success: true,
+      data: result.weights,
+      message: result.message
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: error.message
+    });
+  }
+});
+
 export default router;
